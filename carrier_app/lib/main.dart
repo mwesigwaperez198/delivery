@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'services/socket_service.dart';
 import 'services/courier_tracking_service.dart';
-import 'screens/active_order_screen.dart';
+import 'carrier_features/screens/active_order_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
