@@ -19,34 +19,59 @@ jobs:
         with:
           channel: 'stable'
 
+      - name: Enable Web Support
+        run: flutter config --enable-web
+
       - name: Install Dependencies & Build
         run: |
-          # Build all apps
+          # Build all apps (adds web support if missing)
           for app in admin_app customer_app carrier_app merchant_app; do
-            echo "Building $app..."
-            cd $app
+            echo "=== Building $app ==="
+            if [ ! -d "$app" ]; then
+              echo "Directory $app not found; skipping."
+              continue
+            fi
+            cd "$app"
+
             flutter pub get
+
+            # Add web platform if the project has no web folder
+            if [ ! -d "web" ]; then
+              echo "Web platform not configured for $app — adding web support"
+              flutter create . --platforms=web
+              flutter pub get
+            fi
+
             flutter build web --release --base-href "/${app%_app}/"
             cd ..
           done
 
       - name: Aggregate Build Outputs
         run: |
-          mkdir -p build_output/admin
-          mkdir -p build_output/customer
-          mkdir -p build_output/carrier
-          mkdir -p build_output/merchant
+          mkdir -p build_output
           
-          # Use -a to preserve all files including hidden ones
-          cp -a admin_app/build/web/. build_output/admin/
-          cp -a customer_app/build/web/. build_output/customer/
-          cp -a carrier_app/build/web/. build_output/carrier/
-          cp -a merchant_app/build/web/. build_output/merchant/
+          # Function to safely copy build output
+          safe_copy() {
+            local app_dir=$1
+            local target_subfolder=$2
+            if [ -d "$app_dir/build/web" ]; then
+              mkdir -p "build_output/$target_subfolder"
+              cp -a "$app_dir/build/web/." "build_output/$target_subfolder/"
+              echo "Copied $app_dir output to build_output/$target_subfolder"
+            else
+              echo "Warning: Build output for $app_dir not found at $app_dir/build/web"
+            fi
+          }
+
+          safe_copy "admin_app" "admin"
+          safe_copy "customer_app" "customer"
+          safe_copy "carrier_app" "carrier"
+          safe_copy "merchant_app" "merchant"
           
-          # Landing page
+          # Create a simple landing page at the root URL
           echo '<!DOCTYPE html><html><head><title>Dynamics Ecosystem</title><style>body{background:#121212;color:white;font-family:sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh}a{color:#0E9594;text-decoration:none;font-size:24px;margin:10px;border:1px solid #333;padding:20px;border-radius:10px;width:200px;text-align:center}a:hover{background:#1E1E1E}</style></head><body><h1>Dynamics Hyperlocal Ecosystem</h1><a href="/admin/">Admin App</a><a href="/customer/">Customer App</a><a href="/carrier/">Carrier App</a><a href="/merchant/">Merchant App</a></body></html>' > build_output/index.html
 
-          # Redirects for SPA (Crucial for Cloudflare)
+          # Create _redirects file for Flutter SPA routing support
           echo "/admin/* /admin/index.html 200" > build_output/_redirects
           echo "/customer/* /customer/index.html 200" >> build_output/_redirects
           echo "/carrier/* /carrier/index.html 200" >> build_output/_redirects
@@ -57,5 +82,4 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          # The command below ensures we upload the WHOLE folder
           command: pages deploy build_output --project-name=dynamics-ecosystem
