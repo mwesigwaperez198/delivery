@@ -1,4 +1,5 @@
 name: Build and Deploy Ecosystem
+
 on:
   push:
     branches:
@@ -10,6 +11,7 @@ jobs:
     permissions:
       contents: read
       deployments: write
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -18,11 +20,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: 'npm'
+          cache-dependency-path: merchant_app/package-lock.json
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
+          cache: true
 
       - name: Build Flutter Apps (Admin, Customer, Carrier)
         run: |
@@ -35,7 +40,9 @@ jobs:
               flutter create . --platforms=web
               flutter pub get
             fi
-            flutter build web --release --base-href "/${app%_app}/"
+            # base-href: strip _app suffix so admin_app -> /admin/, carrier_app -> /carrier/
+            BASE="${app%_app}"
+            flutter build web --release --base-href "/${BASE}/"
             cd ..
           done
 
@@ -44,9 +51,8 @@ jobs:
           echo "=== Building Merchant App ==="
           cd merchant_app
           npm install
-          # Install web dependencies and fix version mismatches automatically
+          # Web deps already in package.json — just fix any version mismatches
           npx expo install react-dom react-native-web @expo/metro-runtime --fix
-          npx expo install expo-location --fix
           npx expo export --platform web
           cd ..
 
@@ -57,25 +63,55 @@ jobs:
           mkdir -p build_output/customer
           mkdir -p build_output/carrier
           mkdir -p build_output/merchant
-          
-          # Copy outputs (using -a to preserve structure)
+
           cp -a admin_app/build/web/. build_output/admin/
           cp -a customer_app/build/web/. build_output/customer/
           cp -a carrier_app/build/web/. build_output/carrier/
-          
-          # Copy Merchant (Expo) output
+
           if [ -d "merchant_app/dist" ]; then
             cp -a merchant_app/dist/. build_output/merchant/
           fi
-          
-          # Landing Page
-          echo '<!DOCTYPE html><html><head><title>Dynamics Ecosystem</title><style>body{background:#121212;color:white;font-family:sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh}a{color:#0E9594;text-decoration:none;font-size:24px;margin:10px;border:1px solid #333;padding:20px;border-radius:10px;width:250px;text-align:center}a:hover{background:#1E1E1E}</style></head><body><h1>Dynamics Hyperlocal Ecosystem</h1><a href="/admin/">Admin Portal</a><a href="/customer/">Customer App</a><a href="/carrier/">Carrier (Boda) App</a><a href="/merchant/">Merchant Dashboard</a></body></html>' > build_output/index.html
 
-          # Redirects for SPA Support
-          echo "/admin/* /admin/index.html 200" > build_output/_redirects
-          echo "/customer/* /customer/index.html 200" >> build_output/_redirects
-          echo "/carrier/* /carrier/index.html 200" >> build_output/_redirects
-          echo "/merchant/* /merchant/index.html 200" >> build_output/_redirects
+          # Landing page
+          cat > build_output/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>Dynamics Ecosystem</title>
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <style>
+              * { box-sizing: border-box; margin: 0; padding: 0; }
+              body { background: #0F2D2E; color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+              h1 { color: #0E9594; font-size: 28px; margin-bottom: 8px; }
+              p { color: #ffffff80; font-size: 14px; margin-bottom: 40px; }
+              .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; width: 100%; max-width: 500px; }
+              a { color: white; text-decoration: none; background: #1E1E1E; border: 1px solid #0E9594; padding: 24px 16px; border-radius: 16px; text-align: center; font-size: 16px; font-weight: bold; transition: background 0.2s; }
+              a:hover { background: #0E9594; }
+              .tag { font-size: 11px; color: #F5DF4D; margin-top: 4px; display: block; }
+              footer { margin-top: 48px; color: #ffffff40; font-size: 11px; }
+            </style>
+          </head>
+          <body>
+            <h1>Dynamics</h1>
+            <p>Hyperlocal Delivery Ecosystem — Kampala, Uganda</p>
+            <div class="grid">
+              <a href="/admin/">Admin Portal<span class="tag">Operations</span></a>
+              <a href="/customer/">Customer App<span class="tag">Order & Track</span></a>
+              <a href="/carrier/">Carrier App<span class="tag">Boda Riders</span></a>
+              <a href="/merchant/">Merchant Hub<span class="tag">Vendors</span></a>
+            </div>
+            <footer>Developed by Novara</footer>
+          </body>
+          </html>
+          EOF
+
+          # SPA redirects for Cloudflare Pages
+          cat > build_output/_redirects << 'EOF'
+          /admin/* /admin/index.html 200
+          /customer/* /customer/index.html 200
+          /carrier/* /carrier/index.html 200
+          /merchant/* /merchant/index.html 200
+          EOF
 
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
