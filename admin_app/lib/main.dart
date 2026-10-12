@@ -185,6 +185,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  Widget _buildSectionTitle(String title) {
+    return Text(
+      title,
+      style: const TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.bold,
+        color: Colors.white70,
+        letterSpacing: 1.1,
+      ),
+    );
+  }
+
   Widget _buildFinanceOverview(Map<dynamic, dynamic> finance) {
     return Container(
       width: double.infinity,
