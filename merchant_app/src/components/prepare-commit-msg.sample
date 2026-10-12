@@ -1,0 +1,44 @@
+import { Order } from '../models/Order';
+import { Courier } from '../models/Courier';
+import { Telemetry } from '../models/Telemetry';
+import { SocketEmitter } from './socketEmitter';
+import redis from './redisClient';
+
+/**
+ * AI Dispatch Engine - Hyperlocal Marketplace (Uganda)
+ * Optimized with Redis Caching for Multimillion User Scale
+ */
+export async function processAutomatedDispatch(orderId: string): Promise<void> {
+  try {
+    const order = await Order.findById(orderId);
+    if (!order || order.status !== 'Pending') return;
+
+    const [pickupLng, pickupLat] = order.pickupLocation.coordinates;
+    console.log(`[AI DISPATCH] Processing Order ${orderId} via Redis Hub`);
+
+    // 1. REDIS GEOSPATIAL SEARCH
+    let nearbyCourierIds: [string, string][] = [];
+    try {
+        nearbyCourierIds = await redis.geosearch(
+            'active_couriers',
+            'FROMLONLAT', pickupLng, pickupLat,
+            'BYRADIUS', 5, 'km',
+            'WITHDIST'
+        ) as [string, string][];
+    } catch (e) {
+        console.warn('Redis geosearch failed, falling back to basic matching');
+        // Fallback or handle error
+    }
+
+    // 2. FETCH COURIERS
+    const query: any = {
+      status: 'Available',
+      isOnline: true,
+      'deviceStats.batteryLevel': { $gt: 15 }
+    };
+
+    if (nearbyCourierIds.length > 0) {
+        query._id = { $in: nearbyCourierIds.map(c => c[0]) };
+    }
+
+    const availableCouriers = await Courier.find(qu
