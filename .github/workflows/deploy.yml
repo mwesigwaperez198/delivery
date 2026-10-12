@@ -32,16 +32,21 @@ jobs:
 
       - name: Aggregate Build Outputs
         run: |
-          mkdir build_output
-          cp -r admin_app/build/web/. build_output/admin/
-          cp -r customer_app/build/web/. build_output/customer/
-          cp -r carrier_app/build/web/. build_output/carrier/
-          cp -r merchant_app/build/web/. build_output/merchant/
+          mkdir -p build_output/admin
+          mkdir -p build_output/customer
+          mkdir -p build_output/carrier
+          mkdir -p build_output/merchant
+          
+          # Use -a to preserve all files including hidden ones
+          cp -a admin_app/build/web/. build_output/admin/
+          cp -a customer_app/build/web/. build_output/customer/
+          cp -a carrier_app/build/web/. build_output/carrier/
+          cp -a merchant_app/build/web/. build_output/merchant/
           
           # Landing page
           echo '<!DOCTYPE html><html><head><title>Dynamics Ecosystem</title><style>body{background:#121212;color:white;font-family:sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh}a{color:#0E9594;text-decoration:none;font-size:24px;margin:10px;border:1px solid #333;padding:20px;border-radius:10px;width:200px;text-align:center}a:hover{background:#1E1E1E}</style></head><body><h1>Dynamics Hyperlocal Ecosystem</h1><a href="/admin/">Admin App</a><a href="/customer/">Customer App</a><a href="/carrier/">Carrier App</a><a href="/merchant/">Merchant App</a></body></html>' > build_output/index.html
 
-          # Redirects for SPA
+          # Redirects for SPA (Crucial for Cloudflare)
           echo "/admin/* /admin/index.html 200" > build_output/_redirects
           echo "/customer/* /customer/index.html 200" >> build_output/_redirects
           echo "/carrier/* /carrier/index.html 200" >> build_output/_redirects
@@ -52,4 +57,5 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # The command below ensures we upload the WHOLE folder
           command: pages deploy build_output --project-name=dynamics-ecosystem
