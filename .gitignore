@@ -1,0 +1,27 @@
+# Flutter/Dart
+**/build/
+**/.dart_tool/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/.pub-cache/
+**/.packages
+**/pubspec.lock
+
+# Node.js
+**/node_modules/
+**/.env
+**/npm-debug.log*
+
+# IDEs
+**/.idea/
+**/.vscode/
+*.iml
+
+# Temp/Corrupted Dynamics Files
+customer_app_corrupted/
+cloned_references/
+**/dummy_data/
+
+# OS files
+.DS_Store
+Thumbs.db
