@@ -10,7 +10,7 @@
     "axios": "^1.7.9",
     "expo-location": "~18.0.7",
     "react-dom": "19.2.3",
-    "react-native-web": "~0.19.13",
+    "react-native-web": "~0.21.2",
     "@expo/metro-runtime": "~4.0.0"
   },
   "scripts": {

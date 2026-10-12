@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_background_service/flutter_background_service.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'services/socket_service.dart';
 import 'services/courier_tracking_service.dart';
 import 'carrier_features/screens/active_order_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await CourierTrackingService.initializeService();
+  
+  if (!kIsWeb) {
+    await CourierTrackingService.initializeService();
+  }
+
   runApp(const BodaCarrierApp());
 }
 
@@ -67,25 +71,40 @@ class _CourierDashboardState extends State<CourierDashboard> {
   }
 
   Future<void> _checkServiceStatus() async {
-    final isRunning = await FlutterBackgroundService().isRunning();
-    setState(() => _isServiceRunning = isRunning);
+    if (kIsWeb) {
+      setState(() => _isServiceRunning = false);
+      return;
+    }
+    // Mobile logic
+    // We'll use a dynamic check or a stub to avoid compilation error if the package is removed from web
+    try {
+      final isRunning = await FlutterBackgroundService().isRunning();
+      setState(() => _isServiceRunning = isRunning);
+    } catch (e) {
+      setState(() => _isServiceRunning = false);
+    }
   }
 
   Future<void> _toggleDuty() async {
+    if (kIsWeb) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Background tracking not supported on Web")),
+      );
+      return;
+    }
+
     final service = FlutterBackgroundService();
     if (await service.isRunning()) {
       service.invoke("stopService");
     } else {
       bool success = await service.startService();
       if (!success) {
-        // Handle error if service fails to start
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Failed to start tracking service")),
         );
       }
     }
     
-    // Give time for service to start/stop before checking status
     await Future.delayed(const Duration(milliseconds: 1000));
     _checkServiceStatus();
   }
