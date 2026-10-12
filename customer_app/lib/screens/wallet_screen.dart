@@ -119,7 +119,7 @@ class _WalletScreenState extends State<WalletScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black08, blurRadius: 8)],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 8)],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -179,7 +179,7 @@ class _WalletScreenState extends State<WalletScreen> {
                     color: method['active'] ? const Color(0xFF0E9594) : Colors.transparent,
                     width: 2,
                   ),
-                  boxShadow: [BoxShadow(color: Colors.black08, blurRadius: 6)],
+                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 6)],
                 ),
                 child: Row(
                   children: [
@@ -233,7 +233,7 @@ class _WalletScreenState extends State<WalletScreen> {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: Colors.black08, blurRadius: 4)],
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 4)],
             ),
             child: Row(
               children: [

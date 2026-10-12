@@ -143,7 +143,7 @@ class _SearchScreenState extends State<SearchScreen> {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
-            boxShadow: [BoxShadow(color: Colors.black08, blurRadius: 6)],
+            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 6)],
           ),
           child: Row(
             children: [

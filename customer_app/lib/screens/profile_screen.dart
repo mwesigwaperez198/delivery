@@ -109,7 +109,7 @@ class ProfileScreen extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
-              boxShadow: [BoxShadow(color: Colors.black08, blurRadius: 6)],
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 6)],
             ),
             child: Column(
               children: items.asMap().entries.map((entry) {

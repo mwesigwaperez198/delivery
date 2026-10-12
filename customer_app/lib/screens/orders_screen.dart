@@ -77,7 +77,7 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black08, blurRadius: 8)],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 8)],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -181,7 +181,7 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black08, blurRadius: 8)],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 8)],
       ),
       child: Row(
         children: [
@@ -311,7 +311,7 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black08, blurRadius: 8)],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 8)],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -352,7 +352,7 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
-            boxShadow: [BoxShadow(color: Colors.black08, blurRadius: 6)],
+            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 6)],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

@@ -155,7 +155,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        boxShadow: [BoxShadow(color: Colors.black08, blurRadius: 6)],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 6)],
       ),
       child: TextField(
         controller: _addressController,
@@ -187,7 +187,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: selected ? const Color(0xFF0E9594) : Colors.transparent, width: 2),
-              boxShadow: [BoxShadow(color: Colors.black08, blurRadius: 4)],
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 4)],
             ),
             child: Row(
               children: [
@@ -216,7 +216,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        boxShadow: [BoxShadow(color: Colors.black08, blurRadius: 6)],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 6)],
       ),
       child: Column(
         children: [

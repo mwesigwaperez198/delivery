@@ -46,7 +46,7 @@ class _LocationPickerWidgetState extends State<LocationPickerWidget> {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(14),
-            boxShadow: [BoxShadow(color: Colors.black08, blurRadius: 6)],
+            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 6)],
           ),
           child: TextField(
             controller: _controller,
@@ -75,7 +75,7 @@ class _LocationPickerWidgetState extends State<LocationPickerWidget> {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: Colors.black08, blurRadius: 6)],
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 6)],
             ),
             child: Column(
               children: _filtered.map((s) => ListTile(
