@@ -4,6 +4,10 @@ import 'services/socket_service.dart';
 import 'services/courier_tracking_service.dart';
 import 'carrier_features/screens/active_order_screen.dart';
 
+// Conditional import for the background service (mobile: real package, web: stub)
+import 'services/background_service_stub.dart'
+    if (dart.library.io) 'package:flutter_background_service/flutter_background_service.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
