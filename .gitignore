@@ -7,6 +7,15 @@
 **/.packages
 # **/pubspec.lock  # Committed for reproducible builds
 
+# Flutter generated/ephemeral platform files
+**/flutter/ephemeral/
+**/Flutter/ephemeral/
+**/Generated.xcconfig
+**/flutter_export_environment.sh
+**/GeneratedPluginRegistrant.*
+**/generated_plugin_registrant.*
+**/generated_plugins.cmake
+
 # Node.js
 **/node_modules/
 **/.env
@@ -16,6 +25,8 @@
 **/.idea/
 **/.vscode/
 *.iml
+*.log
+workspace.xml
 
 # Temp/Corrupted Dynamics Files
 customer_app_corrupted/
