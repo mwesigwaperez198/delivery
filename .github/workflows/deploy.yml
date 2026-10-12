@@ -1,4 +1,4 @@
-name: Build and Deploy Apps
+name: Build and Deploy Ecosystem
 on:
   push:
     branches:
@@ -14,64 +14,56 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Node.js (for Merchant & Server logic)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
 
-      - name: Enable Web Support
-        run: flutter config --enable-web
-
-      - name: Install Dependencies & Build
+      - name: Build Flutter Apps (Admin, Customer, Carrier)
         run: |
-          # Build all apps (adds web support if missing)
-          for app in admin_app customer_app carrier_app merchant_app; do
-            echo "=== Building $app ==="
-            if [ ! -d "$app" ]; then
-              echo "Directory $app not found; skipping."
-              continue
-            fi
-            cd "$app"
-
+          flutter config --enable-web
+          for app in admin_app customer_app carrier_app; do
+            echo "=== Building Flutter App: $app ==="
+            cd $app
             flutter pub get
-
-            # Add web platform if the project has no web folder
             if [ ! -d "web" ]; then
-              echo "Web platform not configured for $app — adding web support"
               flutter create . --platforms=web
               flutter pub get
             fi
-
             flutter build web --release --base-href "/${app%_app}/"
             cd ..
           done
+
+      - name: Build Merchant App (React Native/Expo)
+        run: |
+          echo "=== Building Merchant App (Expo) ==="
+          cd merchant_app
+          npm install
+          npx expo export --platform web
+          cd ..
 
       - name: Aggregate Build Outputs
         run: |
           mkdir -p build_output
           
-          # Function to safely copy build output
-          safe_copy() {
-            local app_dir=$1
-            local target_subfolder=$2
-            if [ -d "$app_dir/build/web" ]; then
-              mkdir -p "build_output/$target_subfolder"
-              cp -a "$app_dir/build/web/." "build_output/$target_subfolder/"
-              echo "Copied $app_dir output to build_output/$target_subfolder"
-            else
-              echo "Warning: Build output for $app_dir not found at $app_dir/build/web"
-            fi
-          }
-
-          safe_copy "admin_app" "admin"
-          safe_copy "customer_app" "customer"
-          safe_copy "carrier_app" "carrier"
-          safe_copy "merchant_app" "merchant"
+          # Copy Flutter Apps
+          cp -a admin_app/build/web/. build_output/admin/
+          cp -a customer_app/build/web/. build_output/customer/
+          cp -a carrier_app/build/web/. build_output/carrier/
           
-          # Create a simple landing page at the root URL
-          echo '<!DOCTYPE html><html><head><title>Dynamics Ecosystem</title><style>body{background:#121212;color:white;font-family:sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh}a{color:#0E9594;text-decoration:none;font-size:24px;margin:10px;border:1px solid #333;padding:20px;border-radius:10px;width:200px;text-align:center}a:hover{background:#1E1E1E}</style></head><body><h1>Dynamics Hyperlocal Ecosystem</h1><a href="/admin/">Admin App</a><a href="/customer/">Customer App</a><a href="/carrier/">Carrier App</a><a href="/merchant/">Merchant App</a></body></html>' > build_output/index.html
+          # Copy Merchant App (Expo output is usually in dist/)
+          mkdir -p build_output/merchant
+          cp -a merchant_app/dist/. build_output/merchant/
+          
+          # Root Landing Page
+          echo '<!DOCTYPE html><html><head><title>Dynamics Ecosystem</title><style>body{background:#121212;color:white;font-family:sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh}a{color:#0E9594;text-decoration:none;font-size:24px;margin:10px;border:1px solid #333;padding:20px;border-radius:10px;width:250px;text-align:center}a:hover{background:#1E1E1E}</style></head><body><h1>Dynamics Hyperlocal Ecosystem</h1><a href="/admin/">Admin Portal</a><a href="/customer/">Customer App</a><a href="/carrier/">Carrier (Boda) App</a><a href="/merchant/">Merchant Dashboard</a></body></html>' > build_output/index.html
 
-          # Create _redirects file for Flutter SPA routing support
+          # Redirects for Cloudflare SPA support
           echo "/admin/* /admin/index.html 200" > build_output/_redirects
           echo "/customer/* /customer/index.html 200" >> build_output/_redirects
           echo "/carrier/* /carrier/index.html 200" >> build_output/_redirects
