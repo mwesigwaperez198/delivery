@@ -43,7 +43,10 @@ jobs:
         run: |
           echo "=== Building Merchant App ==="
           cd merchant_app
+          # Use install because package-lock.json is missing
           npm install
+          # Explicitly ensure expo-location is available for the plugin resolver
+          npx expo install expo-location --fix
           npx expo export --platform web
           cd ..
 
@@ -55,16 +58,20 @@ jobs:
           mkdir -p build_output/carrier
           mkdir -p build_output/merchant
           
-          # Copy only the compiled web assets (removes risk of 'functions' error)
-          cp -RT admin_app/build/web build_output/admin
-          cp -RT customer_app/build/web build_output/customer
-          cp -RT carrier_app/build/web build_output/carrier
-          cp -RT merchant_app/dist build_output/merchant
+          # Copy outputs (using -a to preserve structure)
+          cp -a admin_app/build/web/. build_output/admin/
+          cp -a customer_app/build/web/. build_output/customer/
+          cp -a carrier_app/build/web/. build_output/carrier/
           
-          # Create Landing Page
+          # Copy Merchant (Expo) output
+          if [ -d "merchant_app/dist" ]; then
+            cp -a merchant_app/dist/. build_output/merchant/
+          fi
+          
+          # Landing Page
           echo '<!DOCTYPE html><html><head><title>Dynamics Ecosystem</title><style>body{background:#121212;color:white;font-family:sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh}a{color:#0E9594;text-decoration:none;font-size:24px;margin:10px;border:1px solid #333;padding:20px;border-radius:10px;width:250px;text-align:center}a:hover{background:#1E1E1E}</style></head><body><h1>Dynamics Hyperlocal Ecosystem</h1><a href="/admin/">Admin Portal</a><a href="/customer/">Customer App</a><a href="/carrier/">Carrier (Boda) App</a><a href="/merchant/">Merchant Dashboard</a></body></html>' > build_output/index.html
 
-          # Redirects for SPA Support (Crucial)
+          # Redirects for SPA Support
           echo "/admin/* /admin/index.html 200" > build_output/_redirects
           echo "/customer/* /customer/index.html 200" >> build_output/_redirects
           echo "/carrier/* /carrier/index.html 200" >> build_output/_redirects
