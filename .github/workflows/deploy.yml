@@ -43,9 +43,9 @@ jobs:
         run: |
           echo "=== Building Merchant App ==="
           cd merchant_app
-          # Use install because package-lock.json is missing
           npm install
-          # Explicitly ensure expo-location is available for the plugin resolver
+          # Install web dependencies and fix version mismatches automatically
+          npx expo install react-dom react-native-web @expo/metro-runtime --fix
           npx expo install expo-location --fix
           npx expo export --platform web
           cd ..
