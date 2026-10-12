@@ -5,8 +5,9 @@ class SocketService {
   late IO.Socket socket;
   final Logger _logger = Logger();
   
-  // Use 10.0.2.2 for Android Emulator to hit localhost
+  // Hardcoded — same rule as ApiService, change only this line for production
   final String _socketUrl = 'http://10.0.2.2:3000';
+  // final String _socketUrl = 'https://api.dynamics.ug'; // Production
 
   void connect({String? userId, String? role, String? orderId}) {
     socket = IO.io(_socketUrl, IO.OptionBuilder()

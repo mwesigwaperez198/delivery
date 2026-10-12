@@ -3,7 +3,7 @@ import 'package:logger/logger.dart';
 
 class MonitoringService {
   final Dio _dio = Dio(BaseOptions(
-    baseUrl: 'http://localhost:3000/api/monitor',
+    baseUrl: 'http://10.0.2.2:3000/api/monitor', // Android emulator — matches _kBaseUrl in api_service.dart
     connectTimeout: const Duration(seconds: 5),
     receiveTimeout: const Duration(seconds: 3),
   ));

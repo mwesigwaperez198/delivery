@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:location/location.dart';
 
+// Simple address picker — no native location package needed.
+// Works on web, Android, iOS, desktop without permission issues.
+// When Google Maps key is configured, swap the placeholder for a real GoogleMap widget.
 class LocationPickerWidget extends StatefulWidget {
-  final Function(LatLng, String) onLocationSelected;
+  final Function(String address) onLocationSelected;
 
   const LocationPickerWidget({super.key, required this.onLocationSelected});
 
@@ -12,111 +13,105 @@ class LocationPickerWidget extends StatefulWidget {
 }
 
 class _LocationPickerWidgetState extends State<LocationPickerWidget> {
-  GoogleMapController? _mapController;
-  LatLng _currentPosition = const LatLng(0.3476, 32.5825); // Kampala default
-  final Set<Marker> _markers = {};
-  bool _loading = true;
+  final TextEditingController _controller = TextEditingController();
 
-  @override
-  void initState() {
-    super.initState();
-    _getCurrentLocation();
-  }
+  final List<String> _suggestions = [
+    'Ntinda, opposite Shell petrol station',
+    'Wandegeya, near Makerere gate',
+    'Kololo, Acacia Avenue',
+    'Nakasero, near Serena Hotel',
+    'Bugolobi, Shell Bugolobi',
+    'Kireka, Kampala-Jinja Road',
+    'Naalya, Naalya Estate',
+    'Najjera, Najjera 1',
+  ];
 
-  Future<void> _getCurrentLocation() async {
-    Location location = Location();
+  List<String> _filtered = [];
 
-    bool serviceEnabled;
-    PermissionStatus permissionGranted;
-    LocationData locationData;
-
-    serviceEnabled = await location.serviceEnabled();
-    if (!serviceEnabled) {
-      serviceEnabled = await location.requestService();
-      if (!serviceEnabled) return;
-    }
-
-    permissionGranted = await location.hasPermission();
-    if (permissionGranted == PermissionStatus.denied) {
-      permissionGranted = await location.requestPermission();
-      if (permissionGranted != PermissionStatus.granted) return;
-    }
-
-    locationData = await location.getLocation();
+  void _onChanged(String val) {
+    widget.onLocationSelected(val);
     setState(() {
-      _currentPosition = LatLng(locationData.latitude!, locationData.longitude!);
-      _updateMarker(_currentPosition);
-      _loading = false;
+      _filtered = val.isEmpty
+          ? []
+          : _suggestions.where((s) => s.toLowerCase().contains(val.toLowerCase())).toList();
     });
-
-    _mapController?.animateCamera(CameraUpdate.newLatLng(_currentPosition));
-  }
-
-  void _updateMarker(LatLng position) {
-    setState(() {
-      _markers.clear();
-      _markers.add(
-        Marker(
-          markerId: const MarkerId('selected_location'),
-          position: position,
-          draggable: true,
-          onDragEnd: (newPosition) {
-            setState(() {
-              _currentPosition = newPosition;
-            });
-            widget.onLocationSelected(newPosition, "Selected Location");
-          },
-        ),
-      );
-    });
-    widget.onLocationSelected(position, "Selected Location");
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) {
-      return const SizedBox(
-        height: 300,
-        child: Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    return SizedBox(
-      height: 300,
-      child: Stack(
-        children: [
-          GoogleMap(
-            initialCameraPosition: CameraPosition(
-              target: _currentPosition,
-              zoom: 15,
-            ),
-            onMapCreated: (controller) => _mapController = controller,
-            markers: _markers,
-            onTap: (position) {
-              setState(() {
-                _currentPosition = position;
-                _updateMarker(position);
-              });
-            },
-            myLocationEnabled: true,
-            myLocationButtonEnabled: true,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            boxShadow: [BoxShadow(color: Colors.black08, blurRadius: 6)],
           ),
-          Positioned(
-            bottom: 16,
-            left: 16,
-            right: 16,
-            child: Container(
-              padding: const EdgeInsets.all(8),
-              color: Colors.white.withOpacity(0.8),
-              child: const Text(
-                'Tap map to set delivery pin',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
+          child: TextField(
+            controller: _controller,
+            onChanged: _onChanged,
+            decoration: InputDecoration(
+              hintText: 'e.g. Ntinda, opposite Shell petrol station',
+              hintStyle: TextStyle(color: Colors.grey[400], fontSize: 12),
+              prefixIcon: const Icon(Icons.location_on_rounded, color: Color(0xFF0E9594)),
+              suffixIcon: _controller.text.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear, size: 18),
+                      onPressed: () {
+                        _controller.clear();
+                        _onChanged('');
+                      },
+                    )
+                  : null,
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
             ),
           ),
-        ],
-      ),
+        ),
+        if (_filtered.isNotEmpty)
+          Container(
+            margin: const EdgeInsets.only(top: 4),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [BoxShadow(color: Colors.black08, blurRadius: 6)],
+            ),
+            child: Column(
+              children: _filtered.map((s) => ListTile(
+                dense: true,
+                leading: const Icon(Icons.location_on, color: Color(0xFF0E9594), size: 18),
+                title: Text(s, style: const TextStyle(fontSize: 13)),
+                onTap: () {
+                  _controller.text = s;
+                  widget.onLocationSelected(s);
+                  setState(() => _filtered = []);
+                },
+              )).toList(),
+            ),
+          ),
+        const SizedBox(height: 12),
+        // Map placeholder — replace with GoogleMap widget once API key is set
+        Container(
+          height: 160,
+          decoration: BoxDecoration(
+            color: const Color(0xFF0E9594).withOpacity(0.06),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: const Color(0xFF0E9594).withOpacity(0.2)),
+          ),
+          child: const Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.map_rounded, size: 40, color: Color(0xFF0E9594)),
+                SizedBox(height: 8),
+                Text('Map preview', style: TextStyle(color: Color(0xFF0E9594), fontWeight: FontWeight.w500)),
+                Text('Enter address above to set delivery point', style: TextStyle(color: Colors.grey, fontSize: 11)),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
