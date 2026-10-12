@@ -1,27 +1,22 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import { Schema, model } from 'mongoose';
 
-export interface IProduct extends Document {
-  name: string;
-  description: string;
-  price: number;
-  category: 'Food' | 'Supermarket' | 'Electrical' | 'Package';
-  merchantId: string;
-  stock: number;
-  imageUrl?: string;
-}
-
-const ProductSchema: Schema = new Schema({
+const productSchema = new Schema({
+  merchantId: { type: Schema.Types.ObjectId, ref: 'Merchant', required: true },
   name: { type: String, required: true },
-  description: { type: String },
+  description: String,
   price: { type: Number, required: true },
-  category: {
-    type: String,
-    enum: ['Food', 'Supermarket', 'Electrical', 'Package'],
-    required: true
+  category: { type: String, required: true },
+  image: String,
+  isAvailable: { type: Boolean, default: true },
+  discountPrice: Number,
+  tags: [String],
+  metadata: {
+    calories: Number,
+    weight: Number,
+    isVegan: Boolean,
   },
-  merchantId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-  stock: { type: Number, default: 0 },
-  imageUrl: { type: String }
-}, { timestamps: true });
+  createdAt: { type: Date, default: Date.now }
+});
 
-export default mongoose.model<IProduct>('Product', ProductSchema);
+productSchema.index({ merchantId: 1, category: 1 });
+export const Product = model('Product', productSchema);

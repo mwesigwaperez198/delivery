@@ -5,7 +5,8 @@ class ApiService {
   final Dio _dio = Dio();
   final Logger _logger = Logger();
   
-  final String _baseUrl = 'http://10.0.2.2:3000/api';
+  // Use 10.0.2.2 for Android Emulator, localhost for Web/iOS/Windows
+  final String _baseUrl = 'http://localhost:3000/api';
   
   String? _accessToken;
   String? _refreshToken;

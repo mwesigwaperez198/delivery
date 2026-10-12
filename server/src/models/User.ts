@@ -1,27 +1,24 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import { Schema, model } from 'mongoose';
 
-export interface IUser extends Document {
-  name: string;
-  email: string;
-  role: 'customer' | 'merchant' | 'carrier' | 'admin';
-  status: string;
-  location?: {
-    lat: number;
-    lng: number;
-  };
-  isActivated: boolean;
-}
-
-const UserSchema: Schema = new Schema({
-  name: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
-  role: { type: String, enum: ['customer', 'merchant', 'carrier', 'admin'], default: 'customer' },
-  status: { type: String, default: 'Available' },
-  location: {
-    lat: Number,
-    lng: Number
+const userSchema = new Schema({
+  phoneNumber: { type: String, required: true, unique: true },
+  email: { type: String, sparse: true },
+  fullName: { type: String, required: true },
+  password: { type: String, required: true },
+  role: {
+    type: String,
+    enum: ['Customer', 'Merchant', 'Courier', 'Admin'],
+    default: 'Customer'
   },
-  isActivated: { type: Boolean, default: false }
-}, { timestamps: true });
+  profilePicture: String,
+  primaryLandmark: String,
+  savedAddresses: [{
+    label: String,
+    coordinates: [Number],
+    address: String
+  }],
+  status: { type: String, enum: ['Active', 'Suspended'], default: 'Active' },
+  createdAt: { type: Date, default: Date.now }
+});
 
-export default mongoose.model<IUser>('User', UserSchema);
+export const User = model('User', userSchema);

@@ -5,7 +5,7 @@
 **/.flutter-plugins-dependencies
 **/.pub-cache/
 **/.packages
-**/pubspec.lock
+# **/pubspec.lock  # Committed for reproducible builds
 
 # Node.js
 **/node_modules/
@@ -21,6 +21,8 @@
 customer_app_corrupted/
 cloned_references/
 **/dummy_data/
+Dynamics/
+Dynamics_Ecosystem/
 
 # OS files
 .DS_Store
