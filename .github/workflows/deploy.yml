@@ -14,7 +14,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js (for Merchant & Server logic)
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -28,7 +28,7 @@ jobs:
         run: |
           flutter config --enable-web
           for app in admin_app customer_app carrier_app; do
-            echo "=== Building Flutter App: $app ==="
+            echo "=== Building $app ==="
             cd $app
             flutter pub get
             if [ ! -d "web" ]; then
@@ -39,9 +39,9 @@ jobs:
             cd ..
           done
 
-      - name: Build Merchant App (React Native/Expo)
+      - name: Build Merchant App (Expo)
         run: |
-          echo "=== Building Merchant App (Expo) ==="
+          echo "=== Building Merchant App ==="
           cd merchant_app
           npm install
           npx expo export --platform web
@@ -49,21 +49,22 @@ jobs:
 
       - name: Aggregate Build Outputs
         run: |
-          mkdir -p build_output
-          
-          # Copy Flutter Apps
-          cp -a admin_app/build/web/. build_output/admin/
-          cp -a customer_app/build/web/. build_output/customer/
-          cp -a carrier_app/build/web/. build_output/carrier/
-          
-          # Copy Merchant App (Expo output is usually in dist/)
+          rm -rf build_output
+          mkdir -p build_output/admin
+          mkdir -p build_output/customer
+          mkdir -p build_output/carrier
           mkdir -p build_output/merchant
-          cp -a merchant_app/dist/. build_output/merchant/
           
-          # Root Landing Page
+          # Copy only the compiled web assets (removes risk of 'functions' error)
+          cp -RT admin_app/build/web build_output/admin
+          cp -RT customer_app/build/web build_output/customer
+          cp -RT carrier_app/build/web build_output/carrier
+          cp -RT merchant_app/dist build_output/merchant
+          
+          # Create Landing Page
           echo '<!DOCTYPE html><html><head><title>Dynamics Ecosystem</title><style>body{background:#121212;color:white;font-family:sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh}a{color:#0E9594;text-decoration:none;font-size:24px;margin:10px;border:1px solid #333;padding:20px;border-radius:10px;width:250px;text-align:center}a:hover{background:#1E1E1E}</style></head><body><h1>Dynamics Hyperlocal Ecosystem</h1><a href="/admin/">Admin Portal</a><a href="/customer/">Customer App</a><a href="/carrier/">Carrier (Boda) App</a><a href="/merchant/">Merchant Dashboard</a></body></html>' > build_output/index.html
 
-          # Redirects for Cloudflare SPA support
+          # Redirects for SPA Support (Crucial)
           echo "/admin/* /admin/index.html 200" > build_output/_redirects
           echo "/customer/* /customer/index.html 200" >> build_output/_redirects
           echo "/carrier/* /carrier/index.html 200" >> build_output/_redirects
