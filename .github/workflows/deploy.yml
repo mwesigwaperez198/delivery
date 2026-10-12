@@ -7,8 +7,12 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      deployments: write
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -17,38 +21,35 @@ jobs:
 
       - name: Install Dependencies & Build
         run: |
-          # Build Admin App
-          cd admin_app && flutter pub get && flutter build web --release --base-href "/admin/" && cd ..
-          # Build Customer App
-          cd customer_app && flutter pub get && flutter build web --release --base-href "/customer/" && cd ..
-          # Build Carrier App
-          cd carrier_app && flutter pub get && flutter build web --release --base-href "/carrier/" && cd ..
-          # Build Merchant App
-          cd merchant_app && flutter pub get && flutter build web --release --base-href "/merchant/" && cd ..
+          # Build all apps
+          for app in admin_app customer_app carrier_app merchant_app; do
+            echo "Building $app..."
+            cd $app
+            flutter pub get
+            flutter build web --release --base-href "/${app%_app}/"
+            cd ..
+          done
 
       - name: Aggregate Build Outputs
         run: |
           mkdir build_output
-          # Copy contents using /. to ensure we don't nest the 'web' folder
           cp -r admin_app/build/web/. build_output/admin/
           cp -r customer_app/build/web/. build_output/customer/
           cp -r carrier_app/build/web/. build_output/carrier/
           cp -r merchant_app/build/web/. build_output/merchant/
           
-          # Create a simple landing page at the root URL
+          # Landing page
           echo '<!DOCTYPE html><html><head><title>Dynamics Ecosystem</title><style>body{background:#121212;color:white;font-family:sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh}a{color:#0E9594;text-decoration:none;font-size:24px;margin:10px;border:1px solid #333;padding:20px;border-radius:10px;width:200px;text-align:center}a:hover{background:#1E1E1E}</style></head><body><h1>Dynamics Hyperlocal Ecosystem</h1><a href="/admin/">Admin App</a><a href="/customer/">Customer App</a><a href="/carrier/">Carrier App</a><a href="/merchant/">Merchant App</a></body></html>' > build_output/index.html
 
-          # Create _redirects file for Flutter SPA routing support
+          # Redirects for SPA
           echo "/admin/* /admin/index.html 200" > build_output/_redirects
           echo "/customer/* /customer/index.html 200" >> build_output/_redirects
           echo "/carrier/* /carrier/index.html 200" >> build_output/_redirects
           echo "/merchant/* /merchant/index.html 200" >> build_output/_redirects
 
-      - name: Publish to Cloudflare Pages
-        uses: cloudflare/pages-action@v1
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: dynamics-ecosystem
-          directory: build_output
-          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+          command: pages deploy build_output --project-name=dynamics-ecosystem
